@@ -33,6 +33,7 @@ void test_sync_encode_decode() {
   int len;
 
   char buff[BUFSIZE];
+  char buff2[BUFSIZE];
   char sync_state_buff[BUFSIZE];
 
   Backend * dbA = automerge_init();
@@ -52,15 +53,30 @@ void test_sync_encode_decode() {
 
   len = automerge_generate_sync_message(dbB, ssB);
   automerge_read_binary(dbB, buff);
+
+  automerge_decode_sync_message(dbA, buff, len);
+  automerge_read_json(dbA, buff2);
+  printf("Sync message decoded to json -- %s\n", buff2);
+
   automerge_receive_sync_message(dbA, ssA, buff, len);
 
   len = automerge_generate_sync_message(dbA, ssA);
   automerge_read_binary(dbA, buff);
+
+  automerge_decode_sync_message(dbA, buff, len);
+  automerge_read_json(dbA, buff2);
+  printf("Sync message decoded to json -- %s\n", buff2);
+
   automerge_receive_sync_message(dbB, ssB, buff, len);
 
 
   len = automerge_generate_sync_message(dbB, ssB);
   automerge_read_binary(dbB, buff);
+
+  automerge_decode_sync_message(dbA, buff, len);
+  automerge_read_json(dbA, buff2);
+  printf("Sync state decoded to json -- %s\n", buff2);
+
   automerge_receive_sync_message(dbA, ssA, buff, len);
 
   len = automerge_generate_sync_message(dbA, ssA);

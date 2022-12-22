@@ -532,6 +532,28 @@ pub unsafe extern "C" fn automerge_receive_sync_message(
 
 /// # Safety
 /// Must be called with a valid backend pointer
+/// `encoded_msg_[ptr|len]` must be the address & length of a byte array
+// Returns an `isize` indicating the length of the sync message as a JSON string
+// (-1 if there was an error, 0 if there is no patch)
+#[no_mangle]
+pub unsafe extern "C" fn automerge_decode_sync_message(
+    backend: *mut Backend,
+    encoded_msg_ptr: *const u8,
+    encoded_msg_len: usize,
+) -> isize {
+    let slice = std::slice::from_raw_parts(encoded_msg_ptr, encoded_msg_len);
+    let decoded = automerge_backend::SyncMessage::decode(slice);
+    let msg = match decoded {
+        Ok(msg) => msg,
+        Err(e) => {
+            return (*backend).handle_error(e);
+        }
+    };
+    (*backend).generate_json(Ok(msg))
+}
+
+/// # Safety
+/// Must be called with a valid backend pointer
 /// sync_state must be a valid pointer to a SyncState
 /// Returns an `isize` indicating the length of the binary message
 /// (-1 if there was an error, 0 if there is no message)
