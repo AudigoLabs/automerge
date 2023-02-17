@@ -37,6 +37,13 @@ intptr_t automerge_decode_change(Backend *backend, uintptr_t len, const uint8_t 
 
 /**
  * # Safety
+ * Must be called with a valid backend pointer
+ * `encoded_msg_[ptr|len]` must be the address & length of a byte array
+ */
+intptr_t automerge_decode_sync_message(Backend *backend, const uint8_t *encoded_msg_ptr, uintptr_t encoded_msg_len);
+
+/**
+ * # Safety
  * `encoded_state_[ptr|len]` must be the address & length of a byte array
  * Returns an opaque pointer to a SyncState
  * panics (segfault?) if the buffer was invalid

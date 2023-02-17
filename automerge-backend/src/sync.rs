@@ -12,6 +12,11 @@ use crate::{
     decoding, decoding::Decoder, encoding, encoding::Encodable, AutomergeError, Backend, Change,
 };
 
+use serde::{
+    ser::SerializeStruct,
+    Serialize, Serializer,
+};
+
 mod bloom;
 mod state;
 
@@ -365,4 +370,46 @@ fn advance_heads(
     let mut advanced_heads = advanced_heads.into_iter().collect::<Vec<_>>();
     advanced_heads.sort();
     advanced_heads
+}
+
+impl Serialize for SyncHave {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut op = serializer.serialize_struct("SyncHave", 2)?;
+        op.serialize_field("last_sync", &self.last_sync)?;
+        let bloom = match self.bloom.clone().into_bytes() {
+            Ok(bytes) => Some(bytes),
+            Err(_) => None,
+        };
+        op.serialize_field("bloom", &bloom)?;
+        op.end()
+    }
+}
+
+impl Serialize for SyncMessage {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut op = serializer.serialize_struct("SyncMessage", 4)?;
+        op.serialize_field("heads", &self.heads)?;
+        op.serialize_field("need", &self.need)?;
+
+        let have = self.have
+            .clone()
+            .into_iter()
+            .collect::<Vec<_>>();
+        op.serialize_field("have", &have)?;
+
+        let changes = self.changes
+            .clone()
+            .into_iter()
+            .map(|c| c.raw_bytes().to_vec())
+            .collect::<Vec<_>>();
+        op.serialize_field("changes", &changes)?;
+
+        op.end()
+    }
 }
