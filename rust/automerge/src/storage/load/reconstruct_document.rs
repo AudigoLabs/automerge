@@ -205,7 +205,7 @@ fn flush_ops(
     let next_key = next.map(|n| n.key);
     let next_obj = next.map(|n| n.obj);
 
-    if next_obj.is_some() && next_obj < state.last_obj {
+    if next_obj.is_some() && next_obj.unwrap().opid().counter() < state.last_obj.unwrap().opid().counter() {
         return Err(Error::OpsOutOfOrder);
     }
 
